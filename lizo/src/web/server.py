@@ -84,4 +84,42 @@ def create_app(memory, brain=None, cors_origins: str = "http://localhost:5173"):
     def api_v1_status():
         return jsonify({"status": "success", "data": {"online": True, "hardware": False}})
 
+    @app.route("/api/v1/tts", methods=["POST"])
+    def api_v1_tts():
+        body = request.get_json(silent=True) or {}
+        text = body.get("text", "").strip()
+        if not text:
+            return jsonify({"status": "error", "message": "text is required"}), 400
+        if len(text) > 500:
+            return jsonify({"status": "error", "message": "text too long"}), 400
+
+        try:
+            import asyncio
+            import os
+            import tempfile
+
+            import edge_tts
+            from flask import Response
+
+            voice = "zh-CN-XiaoxiaoNeural"  # 温柔女声，适合 Lizo
+            tmp = tempfile.mktemp(suffix=".mp3")
+
+            async def _gen():
+                communicate = edge_tts.Communicate(text, voice)
+                await communicate.save(tmp)
+
+            asyncio.run(_gen())
+
+            with open(tmp, "rb") as f:
+                audio_data = f.read()
+            os.unlink(tmp)
+
+            return Response(
+                audio_data,
+                mimetype="audio/mpeg",
+                headers={"Content-Disposition": 'inline; filename="lizo.mp3"'},
+            )
+        except Exception as e:
+            return jsonify({"status": "error", "message": str(e)}), 500
+
     return app

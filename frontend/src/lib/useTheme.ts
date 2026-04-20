@@ -4,7 +4,11 @@ const THEME_KEY = 'lizo_theme'
 
 export function useTheme() {
   const [night, setNight] = useState(() => {
-    return localStorage.getItem(THEME_KEY) === 'night'
+    try {
+      const saved = localStorage.getItem(THEME_KEY)
+      if (saved) return saved === 'night'
+      return window.matchMedia('(prefers-color-scheme: dark)').matches
+    } catch { return false }
   })
 
   useEffect(() => {

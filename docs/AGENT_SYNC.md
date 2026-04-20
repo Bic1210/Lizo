@@ -34,6 +34,9 @@ GitHub: https://github.com/Bic1210/Lizo
 | 聊天持久化 | localStorage，最多 50 条，刷新不丢失 |
 | 返回识别 | SIGNATURE-1，7 天梯度问候语 |
 | 后端 | 4 个 v1 API，CORS 白名单，消息长度限制 |
+| 聊天稳定性 | `res.ok` 检查、StrictMode 问候修复、AbortController 取消飞行中请求 |
+| 移动端聊天 | iOS 键盘适配，`visualViewport` 驱动聊天区高度，输入栏不再被软键盘遮挡 |
+| 语音后端 | `speaker.py` 去掉 `shell=True`，新增 `/api/v1/tts`，补充 `docs/VOICE_ROADMAP.md` |
 | 部署配置 | `vercel.json`，`VITE_API_BASE_URL` 环境变量 |
 | GitHub | https://github.com/Bic1210/Lizo，main 分支 |
 
@@ -47,8 +50,7 @@ GitHub: https://github.com/Bic1210/Lizo
 | P2 | HTTPS 穿透 | Codex / Claude | ngrok 或 Cloudflare Tunnel，解决 Vercel HTTPS ↔ 树莓派 HTTP 问题 |
 | P3 | 聊天风格进化 | Claude | Lizo 记住用户名字，情绪影响回复风格 |
 | P4 | 即梦视频接入 | 人类 + Claude | 替换 VideoShowcase / VideoGallery 占位符 |
-| P5 | iOS 键盘适配 | Codex | `ChatInput` fixed bottom 被软键盘遮挡（N-1） |
-| P6 | 性能优化 | Codex | `animate-fade-up` will-change，GPU 合成（N-5） |
+| P5 | Web 语音前端接入 | Codex / Claude | 后端 `/api/v1/tts` 已有，前端待接 Web Speech API / 音频播放 |
 
 ---
 
@@ -79,6 +81,12 @@ GitHub: https://github.com/Bic1210/Lizo
 - 完成 TASK-001 ~ TASK-012（见 docs/TASKS.md）
 - 建立 GitHub repo，push main 分支
 - 等待：Vercel 域名配置（需人类操作）
+
+### 2026-04-21 · Codex
+- 完成 P5：聊天页改为跟随容器布局，`visualViewport` 驱动高度，iOS 键盘弹起时输入栏保持可见
+- 完成 P6：动画 keyframes 改为 `translate3d` / `translateZ(0)`，继续走 GPU 合成路径
+- 整理 Claude 未提交改动：`api.ts` 增加 `res.ok` 检查，`Soul.tsx` / `ChatWindow.tsx` 补 AbortController，`useTheme` 兼容系统主题
+- 后端通过 `python3 -m py_compile`，前端通过 `cd frontend && npm run build`
 
 ---
 

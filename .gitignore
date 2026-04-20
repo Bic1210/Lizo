@@ -19,6 +19,7 @@ Thumbs.db
 # Editor
 .vscode/
 .idea/
+.codex/
 
 # References / large assets
 references/*.mp4

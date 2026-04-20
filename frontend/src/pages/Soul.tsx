@@ -14,13 +14,21 @@ export default function Soul() {
   const [fetchError, setFetchError] = useState(false)
 
   useEffect(() => {
+    const ctrl = new AbortController()
+    const signal = ctrl.signal
+
     Promise.all([
-      apiFetch('/api/v1/diary').then(r => r.json()),
-      apiFetch('/api/v1/emotion').then(r => r.json()),
+      apiFetch('/api/v1/diary', { signal }).then(r => r.json()),
+      apiFetch('/api/v1/emotion', { signal }).then(r => r.json()),
     ]).then(([diary, emotion]) => {
       if (diary.status === 'success') setDiaries(diary.data)
       if (emotion.status === 'success') setEmotions(emotion.data)
-    }).catch(() => setFetchError(true)).finally(() => setLoading(false))
+    }).catch((e) => {
+      if (e instanceof Error && e.name === 'AbortError') return
+      setFetchError(true)
+    }).finally(() => setLoading(false))
+
+    return () => ctrl.abort()
   }, [])
 
   return (
