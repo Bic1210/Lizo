@@ -27,6 +27,7 @@ const THINKING_PHRASES = [
 const FIRST_VISIT_KEY = 'lizo_first_visit'
 const LAST_VISIT_KEY  = 'lizo_last_visit'
 const HISTORY_KEY     = 'lizo_chat_history'
+const VOICE_KEY       = 'lizo_voice_enabled'
 const MAX_HISTORY     = 50
 const NAV_HEIGHT_PX   = 56
 
@@ -90,10 +91,20 @@ export default function ChatWindow() {
   })
   const [loading, setLoading] = useState(false)
   const [thinkingPhrase, setThinkingPhrase] = useState(THINKING_PHRASES[0])
+  const [typewriterId, setTypewriterId] = useState<string | null>(null)
   const [viewportHeight, setViewportHeight] = useState<number | null>(readViewportHeight)
+  const [voiceEnabled, setVoiceEnabled] = useState(() => {
+    try {
+      return localStorage.getItem(VOICE_KEY) !== 'off'
+    } catch { return true }
+  })
   const bottomRef = useRef<HTMLDivElement>(null)
   // 修复 C-1：AbortController ref，用于组件卸载时取消飞行中的请求
   const abortRef = useRef<AbortController | null>(null)
+  const ttsAbortRef = useRef<AbortController | null>(null)
+  const audioRef = useRef<HTMLAudioElement | null>(null)
+  const audioUrlRef = useRef<string | null>(null)
+  const lastSpokenIdRef = useRef<string | null>(null)
 
   // 修复 M-3：只在挂载时执行一次写入副作用
   useEffect(() => {
@@ -102,6 +113,12 @@ export default function ChatWindow() {
 
   // 修复 C-1：组件卸载时 abort 所有飞行中请求
   useEffect(() => () => { abortRef.current?.abort() }, [])
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(VOICE_KEY, voiceEnabled ? 'on' : 'off')
+    } catch { /* noop */ }
+  }, [voiceEnabled])
 
   // P5: iOS 键盘弹起时，跟随 visualViewport 收缩聊天区域，避免输入栏被遮住
   useEffect(() => {
@@ -132,6 +149,77 @@ export default function ChatWindow() {
     } catch { /* QuotaExceeded */ }
   }, [messages, loading])
 
+  useEffect(() => {
+    function cleanupAudio() {
+      audioRef.current?.pause()
+      audioRef.current = null
+      if (audioUrlRef.current) {
+        URL.revokeObjectURL(audioUrlRef.current)
+        audioUrlRef.current = null
+      }
+    }
+
+    if (!voiceEnabled) {
+      ttsAbortRef.current?.abort()
+      cleanupAudio()
+      return
+    }
+
+    if (loading || !messages.some(m => m.role === 'user')) return
+    const lastLizoMessage = [...messages].reverse().find(m => m.role === 'lizo')
+    if (!lastLizoMessage || lastLizoMessage.id === lastSpokenIdRef.current) return
+
+    const ctrl = new AbortController()
+    ttsAbortRef.current?.abort()
+    ttsAbortRef.current = ctrl
+
+    void (async () => {
+      try {
+        const res = await apiFetch('/api/v1/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: lastLizoMessage.text }),
+          signal: ctrl.signal,
+        })
+        const audioBlob = await res.blob()
+        if (ctrl.signal.aborted) return
+
+        cleanupAudio()
+        const url = URL.createObjectURL(audioBlob)
+        const audio = new Audio(url)
+        audioUrlRef.current = url
+        audioRef.current = audio
+        lastSpokenIdRef.current = lastLizoMessage.id
+
+        const releaseAudio = () => {
+          if (audioRef.current === audio) audioRef.current = null
+          if (audioUrlRef.current === url) {
+            URL.revokeObjectURL(url)
+            audioUrlRef.current = null
+          }
+        }
+
+        audio.onended = releaseAudio
+        audio.onerror = releaseAudio
+        await audio.play().catch(() => undefined)
+      } catch (e) {
+        if (e instanceof Error && e.name === 'AbortError') return
+      }
+    })()
+
+    return () => ctrl.abort()
+  }, [loading, messages, voiceEnabled])
+
+  useEffect(() => () => {
+    abortRef.current?.abort()
+    ttsAbortRef.current?.abort()
+    audioRef.current?.pause()
+    if (audioUrlRef.current) {
+      URL.revokeObjectURL(audioUrlRef.current)
+      audioUrlRef.current = null
+    }
+  }, [])
+
   async function handleSend(text: string) {
     // 修复 C-1：取消上一个还在飞行中的请求
     abortRef.current?.abort()
@@ -151,13 +239,19 @@ export default function ChatWindow() {
       })
       const json = await res.json()
       if (json.status === 'success') {
-        setMessages(prev => [...prev, newMsg('lizo', json.data.reply, json.data.emotion)])
+        const reply = newMsg('lizo', json.data.reply, json.data.emotion)
+        setTypewriterId(reply.id)
+        setMessages(prev => [...prev, reply])
       } else {
-        setMessages(prev => [...prev, newMsg('lizo', '…（Lizo 走神了一下，再说一次？）')])
+        const reply = newMsg('lizo', '…（Lizo 走神了一下，再说一次？）')
+        setTypewriterId(reply.id)
+        setMessages(prev => [...prev, reply])
       }
     } catch (e) {
       if (e instanceof Error && e.name === 'AbortError') return
-      setMessages(prev => [...prev, newMsg('lizo', '…（信号好像不太好，稍后再试试）')])
+      const reply = newMsg('lizo', '…（信号好像不太好，稍后再试试）')
+      setTypewriterId(reply.id)
+      setMessages(prev => [...prev, reply])
     } finally {
       setLoading(false)
     }
@@ -178,6 +272,14 @@ export default function ChatWindow() {
           <p className="text-sm font-display font-semibold text-text-primary">Lizo</p>
           <p className="text-xs text-text-muted font-body">在线</p>
         </div>
+        <button
+          type="button"
+          onClick={() => setVoiceEnabled(v => !v)}
+          className="ml-auto px-3 py-1.5 rounded-full text-xs font-body border border-lizo-cream text-text-secondary hover:text-text-primary hover:border-lizo-pink transition-colors duration-300"
+          aria-label={voiceEnabled ? '关闭 Lizo 语音' : '开启 Lizo 语音'}
+        >
+          {voiceEnabled ? '🔈 Lizo 会说话' : '🔇 静音'}
+        </button>
       </div>
 
       {/* Messages */}
@@ -186,7 +288,13 @@ export default function ChatWindow() {
         style={{ scrollPaddingBottom: '1rem' }}
       >
         {messages.map(m => (
-          <ChatMessage key={m.id} role={m.role} text={m.text} emotion={m.emotion} />
+          <ChatMessage
+            key={m.id}
+            role={m.role}
+            text={m.text}
+            emotion={m.emotion}
+            typewriter={m.id === typewriterId}
+          />
         ))}
 
         {loading && (

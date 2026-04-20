@@ -83,7 +83,7 @@ curl https://lizo-random-words.trycloudflare.com/api/v1/status
 
 ```bash
 # frontend/.env.production
-VITE_API_URL=https://lizo-random-words.trycloudflare.com
+VITE_API_BASE_URL=https://lizo-random-words.trycloudflare.com
 ```
 
 > ⚠️ 把地址换成你 1.4 步拿到的真实 Tunnel 地址
@@ -124,7 +124,7 @@ https://lizo.vercel.app
 
 | Name | Value | Environment |
 |------|-------|-------------|
-| `VITE_API_URL` | `https://lizo-random-words.trycloudflare.com` | ✅ Production |
+| `VITE_API_BASE_URL` | `https://lizo-random-words.trycloudflare.com` | ✅ Production |
 
 3. 保存后点 **Deployments → 最新一次 → Redeploy**
 
@@ -145,6 +145,13 @@ web:
 ```bash
 # Ctrl+C 停掉原来的，然后重新跑
 python3 -m src.main --web-only
+```
+
+也可以不改 `config.yaml`，直接在启动时用环境变量覆盖：
+
+```bash
+cd lizo
+LIZO_CORS_ORIGINS="https://lizo.vercel.app,http://localhost:5173" python3 -m src.main --web-only
 ```
 
 ---

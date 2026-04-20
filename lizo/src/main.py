@@ -14,6 +14,7 @@ import sys
 import time
 import threading
 import argparse
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -30,7 +31,17 @@ from src.web.server import create_app
 def load_config() -> dict:
     config_path = Path(__file__).parent.parent / "config.yaml"
     with open(config_path) as f:
-        return yaml.safe_load(f)
+        config = yaml.safe_load(f)
+
+    web_config = config.setdefault("web", {})
+    if os.getenv("LIZO_WEB_HOST"):
+        web_config["host"] = os.environ["LIZO_WEB_HOST"]
+    if os.getenv("LIZO_WEB_PORT"):
+        web_config["port"] = int(os.environ["LIZO_WEB_PORT"])
+    if os.getenv("LIZO_CORS_ORIGINS"):
+        web_config["cors_origins"] = os.environ["LIZO_CORS_ORIGINS"]
+
+    return config
 
 
 def run_voice_mode(config, memory, brain, body):

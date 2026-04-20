@@ -1,7 +1,10 @@
+import { useEffect, useState } from 'react'
+
 interface ChatMessageProps {
   role: 'user' | 'lizo'
   text: string
   emotion?: string
+  typewriter?: boolean
 }
 
 const EMOTION_WHISPER: Record<string, string> = {
@@ -15,8 +18,30 @@ const EMOTION_WHISPER: Record<string, string> = {
   '--':  '',
 }
 
-export default function ChatMessage({ role, text, emotion }: ChatMessageProps) {
+export default function ChatMessage({ role, text, emotion, typewriter = false }: ChatMessageProps) {
   const isLizo = role === 'lizo'
+  const [visibleText, setVisibleText] = useState(typewriter && isLizo ? '' : text)
+
+  useEffect(() => {
+    if (!isLizo || !typewriter) {
+      setVisibleText(text)
+      return
+    }
+
+    setVisibleText('')
+    let cursor = 0
+    let timer = 0
+    const step = () => {
+      cursor = Math.min(text.length, cursor + Math.max(1, Math.ceil(text.length / 28)))
+      setVisibleText(text.slice(0, cursor))
+      if (cursor < text.length) {
+        timer = window.setTimeout(step, 22)
+      }
+    }
+
+    timer = window.setTimeout(step, 36)
+    return () => window.clearTimeout(timer)
+  }, [isLizo, text, typewriter])
 
   return (
     <div className={`flex items-end gap-2 animate-fade-up ${isLizo ? 'justify-start' : 'justify-end'}`}>
@@ -35,7 +60,10 @@ export default function ChatMessage({ role, text, emotion }: ChatMessageProps) {
           }
         `}
       >
-        {text}
+        {visibleText}
+        {typewriter && isLizo && visibleText.length < text.length && (
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-text-muted ml-1.5 animate-breathe align-middle" />
+        )}
         {isLizo && emotion && EMOTION_WHISPER[emotion] && (
           <span className="block text-[11px] text-text-muted italic mt-1 opacity-75">
             {EMOTION_WHISPER[emotion]}

@@ -37,6 +37,8 @@ GitHub: https://github.com/Bic1210/Lizo
 | 聊天稳定性 | `res.ok` 检查、StrictMode 问候修复、AbortController 取消飞行中请求 |
 | 移动端聊天 | iOS 键盘适配，`visualViewport` 驱动聊天区高度，输入栏不再被软键盘遮挡 |
 | 语音后端 | `speaker.py` 去掉 `shell=True`，新增 `/api/v1/tts`，补充 `docs/VOICE_ROADMAP.md` |
+| Web 语音体验 | Chat 页支持浏览器语音输入、Lizo TTS 自动播放开关、新回复打字机效果 |
+| 部署运行时覆盖 | `LIZO_CORS_ORIGINS` / `LIZO_WEB_HOST` / `LIZO_WEB_PORT` 环境变量覆盖 `config.yaml` |
 | 部署配置 | `vercel.json`，`VITE_API_BASE_URL` 环境变量 |
 | GitHub | https://github.com/Bic1210/Lizo，main 分支 |
 
@@ -50,7 +52,6 @@ GitHub: https://github.com/Bic1210/Lizo
 | P2 | HTTPS 穿透 | Codex / Claude | ngrok 或 Cloudflare Tunnel，解决 Vercel HTTPS ↔ 树莓派 HTTP 问题 |
 | P3 | 聊天风格进化 | Claude | Lizo 记住用户名字，情绪影响回复风格 |
 | P4 | 即梦视频接入 | 人类 + Claude | 替换 VideoShowcase / VideoGallery 占位符 |
-| P5 | Web 语音前端接入 | Codex / Claude | 后端 `/api/v1/tts` 已有，前端待接 Web Speech API / 音频播放 |
 
 ---
 
@@ -87,6 +88,8 @@ GitHub: https://github.com/Bic1210/Lizo
 - 完成 P6：动画 keyframes 改为 `translate3d` / `translateZ(0)`，继续走 GPU 合成路径
 - 整理 Claude 未提交改动：`api.ts` 增加 `res.ok` 检查，`Soul.tsx` / `ChatWindow.tsx` 补 AbortController，`useTheme` 兼容系统主题
 - 后端通过 `python3 -m py_compile`，前端通过 `cd frontend && npm run build`
+- 继续完成 Web 语音前端：ChatInput 接入 Web Speech API，ChatWindow 增加 Lizo 语音开关与 `/api/v1/tts` 自动播放，ChatMessage 为最新回复加打字机效果
+- 收口部署配置：`docs/DEPLOY.md` 改为统一使用 `VITE_API_BASE_URL`，`src.main` 支持用 `LIZO_CORS_ORIGINS` 等环境变量覆盖运行时配置
 
 ---
 
