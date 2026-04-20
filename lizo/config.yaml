@@ -1,0 +1,35 @@
+# ============================================
+#  Lizo Configuration
+# ============================================
+
+# AI Model (OpenRouter)
+ai:
+  api_key: "YOUR_OPENROUTER_KEY_HERE"
+  base_url: "https://openrouter.ai/api/v1"
+  model: "openai/gpt-4o-mini"
+  max_tokens: 80
+  temperature: 0.8
+
+# Voice
+voice:
+  tts_voice: "zh-CN-XiaoyiNeural"
+  stt_language: "zh-CN"
+  listen_timeout: 5
+  phrase_limit: 8
+
+# Arduino Serial
+arduino:
+  port: "/dev/ttyUSB0"   # or /dev/ttyACM0
+  baud: 9600
+
+# Web Dashboard
+web:
+  host: "0.0.0.0"
+  port: 5000
+  # CORS 允许的来源，逗号分隔。生产环境填 Vercel 域名，开发时填 localhost
+  cors_origins: "http://localhost:5173,http://localhost:4173"
+
+# Paths
+paths:
+  audio_dir: "audio"
+  database: "memory.db"

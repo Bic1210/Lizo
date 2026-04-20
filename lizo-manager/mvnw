@@ -1,0 +1,26 @@
+#!/bin/sh
+# Maven Wrapper script — downloads Maven automatically if not installed.
+# Usage: ./mvnw <goals>
+set -e
+
+MAVEN_WRAPPER_JAR=".mvn/wrapper/maven-wrapper.jar"
+MAVEN_WRAPPER_PROPERTIES=".mvn/wrapper/maven-wrapper.properties"
+
+# Read distributionUrl
+DISTRIBUTION_URL=$(grep distributionUrl "$MAVEN_WRAPPER_PROPERTIES" | sed 's/distributionUrl=//')
+MVN_VERSION=$(echo "$DISTRIBUTION_URL" | grep -oE 'apache-maven-[0-9]+\.[0-9]+\.[0-9]+' | head -1)
+
+# Where to install Maven
+MVN_HOME="$HOME/.m2/wrapper/$MVN_VERSION"
+
+if [ ! -d "$MVN_HOME" ]; then
+  echo "Downloading $MVN_VERSION..."
+  mkdir -p "$MVN_HOME"
+  TMP=$(mktemp -d)
+  curl -sL "$DISTRIBUTION_URL" -o "$TMP/maven.zip"
+  unzip -q "$TMP/maven.zip" -d "$TMP"
+  mv "$TMP/$MVN_VERSION"/* "$MVN_HOME/"
+  rm -rf "$TMP"
+fi
+
+exec "$MVN_HOME/bin/mvn" "$@"

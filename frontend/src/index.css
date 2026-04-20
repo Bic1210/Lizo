@@ -1,0 +1,92 @@
+@import "tailwindcss";
+
+@theme {
+  /* Day Mode */
+  --color-bg-base: #F6F2EA;
+  --color-bg-surface: #FFF8F0;
+  --color-bg-elevated: #FFFFFF;
+
+  --color-lizo-pink: #F2A0B0;
+  --color-lizo-pink-deep: #E896A8;
+  --color-lizo-cream: #F5E8D3;
+  --color-lizo-brown: #C4895A;
+
+  --color-text-primary: #2D1A0E;
+  --color-text-secondary: #7A5C3E;
+  --color-text-muted: #B89E85;
+
+  --color-accent-coral: #E96A5F;
+  --color-accent-sky: #7FB3D5;
+
+  /* Night Mode */
+  --color-night-bg: #0B0F1A;
+  --color-night-surface: #141824;
+  --color-night-elevated: #1E2436;
+  --color-glow-primary: #7A5CFF;
+  --color-glow-soft: #A88BFF;
+  --color-night-text: #E6E9F2;
+  --color-night-muted: #6B7280;
+
+  /* Emotion */
+  --color-emotion-happy: #F2A0B0;
+  --color-emotion-calm: #7FB3D5;
+  --color-emotion-excited: #E96A5F;
+  --color-emotion-sad: #7A5CFF;
+  --color-emotion-lonely: #9CA3AF;
+
+  /* Typography */
+  --font-display: 'Nunito', 'ZCOOL KuaiLe', -apple-system, sans-serif;
+  --font-body: 'Inter', 'PingFang SC', -apple-system, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Font sizes */
+  --font-size-hero: 52px;
+
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 20px;
+  --radius-xl: 28px;
+
+  /* Animations */
+  --animate-breathe: breathe 3s ease-in-out infinite;
+  --animate-fade-up: fade-up 300ms ease-out both;
+}
+
+@keyframes breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.03); }
+}
+
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+body {
+  margin: 0;
+  background-color: var(--color-bg-base);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+.animate-breathe {
+  will-change: transform;
+}
+
+.animate-fade-up {
+  will-change: transform, opacity;
+}
+
+[data-theme="night"] {
+  --color-bg-base: var(--color-night-bg);
+  --color-bg-surface: var(--color-night-surface);
+  --color-bg-elevated: var(--color-night-elevated);
+  --color-text-primary: var(--color-night-text);
+  --color-text-secondary: #A8B2C8;
+  --color-text-muted: var(--color-night-muted);
+  --color-lizo-pink: var(--color-glow-soft);
+  --color-lizo-pink-deep: var(--color-glow-primary);
+  --color-lizo-cream: #2A3050;
+}

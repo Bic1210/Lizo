@@ -1,0 +1,32 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//mnt/d/ayibike/PRP/**)",
+      "Read(//tmp/**)",
+      "Bash(mkdir -p ~/.claude/agents)",
+      "Bash(git clone *)",
+      "Bash(cp /tmp/agency-agents/engineering/engineering-frontend-developer.md /tmp/agency-agents/engineering/engineering-backend-architect.md /tmp/agency-agents/engineering/engineering-ai-engineer.md /tmp/agency-agents/engineering/engineering-embedded-firmware-engineer.md /tmp/agency-agents/design/design-brand-guardian.md /tmp/agency-agents/design/design-whimsy-injector.md /tmp/agency-agents/design/design-ui-designer.md /tmp/agency-agents/product/product-manager.md /tmp/agency-agents/product/product-behavioral-nudge-engine.md /tmp/agency-agents/testing/testing-reality-checker.md /tmp/agency-agents/marketing/marketing-xiaohongshu-specialist.md /tmp/agency-agents/marketing/marketing-douyin-strategist.md '~/.claude/agents/')",
+      "Read(//home/aybk0/.claude/agents/**)",
+      "Bash(npm create *)",
+      "Bash(npx create-vite@9.0.4 . --template react-ts)",
+      "Bash(npx create-vite@9.0.4 --help)",
+      "Bash(rmdir src *)",
+      "Bash(npx create-vite@9.0.4 . --template react-ts --no-interactive)",
+      "Bash(npm install *)",
+      "Bash(npm run *)",
+      "Bash(wait)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(curl -LsSf https://astral.sh/uv/install.sh)",
+      "Bash(sh)",
+      "Bash(cmd.exe *)",
+      "Bash(curl -s http://localhost:9222/json/version)",
+      "Bash(powershell.exe *)",
+      "Bash(python3 -c \"import sys,json; d=json.load\\(sys.stdin\\); print\\(d['webSocketDebuggerUrl']\\)\")",
+      "Bash(curl -s http://localhost:5173)",
+      "Bash(curl -s http://localhost:3000)",
+      "Bash(chmod +x *)",
+      "Bash(git init *)",
+      "Bash(git add *)"
+    ]
+  }
+}

@@ -1,0 +1,12 @@
+spring:
+  main:
+    web-application-type: none   # no embedded server, pure CLI
+    banner-mode: off
+
+lizo:
+  # Path to the lizo/config.yaml on your machine (edit this!)
+  config-path: "../lizo/config.yaml"
+  # Base URL of the running Pi backend (or Cloudflare Tunnel URL)
+  api-url: "http://localhost:5000"
+  # Connection timeout in seconds
+  timeout: 10
