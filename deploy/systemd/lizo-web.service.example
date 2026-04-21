@@ -1,0 +1,16 @@
+[Unit]
+Description=Lizo Web Backend
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=pi
+WorkingDirectory=/home/pi/Lizo/lizo
+Environment="LIZO_CORS_ORIGINS=https://lizo.example.com,https://your-project.vercel.app,http://localhost:5173"
+ExecStart=/usr/bin/python3 -m src.main --web-only
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

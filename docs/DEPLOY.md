@@ -18,6 +18,12 @@
 
 ## Part 1：树莓派准备
 
+仓库里已经提供两个可直接改名复用的模板：
+
+- `deploy/cloudflared/config.example.yml`
+- `deploy/systemd/lizo-web.service.example`
+- `deploy/systemd/cloudflared-lizo.service.example`
+
 ### 1.1 填写 API Key
 
 编辑 `lizo/config.yaml`：
@@ -50,6 +56,13 @@ chmod +x ~/cloudflared
 ~/cloudflared tunnel create lizo
 ```
 
+如果你准备长期运行，不要每次手敲命令，直接把仓库里的模板复制出来改：
+
+```bash
+mkdir -p ~/Lizo/deploy/cloudflared
+cp deploy/cloudflared/config.example.yml deploy/cloudflared/config.yml
+```
+
 ### 1.4 启动后端
 
 ```bash
@@ -59,6 +72,16 @@ python3 -m src.main --web-only
 
 # 终端 2：启动 Cloudflare Tunnel
 ~/cloudflared tunnel --url http://localhost:5000
+```
+
+如果要走固定域名 + systemd 常驻：
+
+```bash
+sudo cp deploy/systemd/lizo-web.service.example /etc/systemd/system/lizo-web.service
+sudo cp deploy/systemd/cloudflared-lizo.service.example /etc/systemd/system/cloudflared-lizo.service
+sudo systemctl daemon-reload
+sudo systemctl enable --now lizo-web.service
+sudo systemctl enable --now cloudflared-lizo.service
 ```
 
 Tunnel 启动后会打印一个地址，**记下来**，例如：
