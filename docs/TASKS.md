@@ -1,145 +1,267 @@
-# Lizo 任务队列
+# LIIZOOO 2.0 Task Tree
 
-> `/integrator` 维护此文件。所有 Agent 执行任务前先看这里，找到自己的 TODO 任务。
-> 
-> 状态：`TODO` → `IN_PROGRESS` → `DONE` | `BLOCKED`
+> **Current and sole executable task queue.** Every agent must first read `docs/LIIZOOO_AGENT_PROTOCOL.md` and this file. The former Lizo Web MVP tasks are historical; their implementation remains in the repository but does not define current scope.
 
----
+## Delivery target
 
-## 当前冲刺：Web 平台 MVP
+Within two days, demonstrate one quiet creature moving continuously between Desktop and Mobile Habitats through LIIZOOO NEST. The final Demo must show autonomous presence, touch/hug response, Device Jump, persisted state and a clear Nest artefact story.
 
-### TASK-001: 初始化 React 前端项目
-- **Agent**: `/frontend`
-- **读取**: `docs/DESIGN.md`, `docs/ARCHITECTURE.md`
-- **输入**: 用 Vite 初始化 React 18 + TypeScript + Tailwind 项目，在 `frontend/` 目录。配置路由（React Router v6），建立页面骨架（4个页面）。配置 Tailwind 读取 DESIGN.md 里的颜色变量。
-- **完成标准**: 
-  - `frontend/` 下有完整项目结构
-  - `npm run dev` 能跑起来
-  - 4个页面路由能访问（内容可以是占位符）
-  - Tailwind 配置了自定义颜色变量
-- **状态**: DONE（Vite + React 18 + TS + Tailwind v4 + React Router v6，4 页面路由，build 零错误）
+## Status flow
 
----
+`TODO` → `IN_PROGRESS` → `QA` → `CRITIC` → `DONE` or `REJECTED` / `BLOCKED`
 
-### TASK-002: 填写 DESIGN.md（等 Stitch 导出）
-- **Agent**: `/designer`
-- **读取**: `stitch-exports/`, `references/`, `docs/DESIGN.md`
-- **输入**: 用 Stitch 导出的设计稿内容填充 DESIGN.md 中所有 `[待填写]` 的占位符。确保颜色语义命名清晰，字体规则完整。
-- **完成标准**:
-  - DESIGN.md 中无 `[待填写]` 占位符
-  - 颜色全部有具体 hex 值
-  - 字体族名称确定
-- **状态**: DONE（DESIGN.md v2 已有完整色值和字体，Stitch 可视化后续导入）
+Only one implementation task may be `IN_PROGRESS` per owned file set.
+
+## Baseline / freeze
+
+### LZ-000 — Baseline audit and scope freeze
+
+- **Owner:** Orchestrator
+- **Reviewers:** Product Owner
+- **Goal / research relevance:** Prevent Liizooo 2.0 from inheriting chat-first scope or untracked implementation claims.
+- **Dependencies:** None
+- **Allowed files:** `docs/LIIZOOO_AGENT_PROTOCOL.md`, `docs/TASKS.md`, `docs/DECISIONS.md`
+- **Forbidden files:** All product source, configuration, assets and Arduino files.
+- **Deliverables:** Protocol, current task tree, known-baseline statement.
+- **Acceptance:**
+  - [x] Existing worktree is declared dirty and protected.
+  - [x] Native desktop pet, Watch sensing and user testing are labelled unimplemented.
+  - [x] Sprint scope is limited to Creature, Habitats, Nest and Continuity.
+- **Status:** DONE
 
 ---
 
-### TASK-003: 实现首页组件
-- **Agent**: `/frontend`
-- **依赖**: TASK-001, TASK-002（如 TASK-002 未完成，用 DESIGN.md 现有默认值先做）
-- **读取**: `docs/DESIGN.md`, `docs/ARCHITECTURE.md`
-- **输入**: 实现首页的 4 个组件：LizoHero, FeatureSection, VideoShowcase, CTASection。LizoHero 展示即梦生成的 Lizo 形象图（放在 `references/` 下）。
-- **完成标准**:
-  - 4 个组件存在且在首页渲染
-  - 移动端响应式正常
-  - 颜色/字体与 DESIGN.md 一致
-  - Lizo 形象图正确显示
-- **状态**: DONE（LizoHero/FeatureSection/VideoShowcase/CTASection 全部实现，UI审查 PASS 45/50，emoji 占位待真实形象图替换）
+# Sprint 01 — Make Liizooo Alive
+
+## LZ-001 — Creature State Model and contract
+
+- **Owner:** Architect
+- **Reviewers:** Backend/Nest Agent, Design Agent, Critic
+- **Goal / research relevance:** Define one canonical creature state so all habitats render Liizooo's condition rather than locally inventing one.
+- **Dependencies:** LZ-000
+- **Allowed files:** `docs/CREATURE_STATE.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`
+- **Forbidden files:** `frontend/src/**`, `lizo/src/**`, `lizo_v4/**`, configuration and assets.
+- **Inputs / contract:** Current Nest state: `location`, `mood`, `energy`, `bond`, `behavior`, `updated_at`.
+- **Required behaviour:** Specify valid state vocabulary, transition rules, defaults, persistence semantics, Nest authority, API payload/versioning, inactivity model, and how each habitat expresses each state. Explicitly decide whether physiology/presence are persisted now or deferred.
+- **Deliverables:** `CreatureState` contract, transition table, migration strategy and non-goals.
+- **Acceptance:**
+  - [x] No state is undefined, duplicated or controlled independently by a habitat.
+  - [x] `idle`, `breathing`, `looking`, `crawling`, `sleeping`, `stroking`, `hugging`, `arriving`, `leaving` are resolved as implemented-now, mapped, or deferred.
+  - [x] Contract can be implemented without a Product Owner decision.
+  - [x] Critic confirms it supports continuous identity rather than a dashboard.
+- **Review evidence:** Design review PASS; Architect review PASS; Critic PASS after resolving leaving visibility, stress recovery/idempotency, actor validation and sleep conflict rules.
+- **Status:** DONE
+
+## LZ-D01 — Behaviour choreography specification
+
+- **Owner:** Design Agent
+- **Reviewers:** Architect, Critic
+- **Goal / research relevance:** Define how a quiet creature conveys state without product UI or diagnostic language.
+- **Dependencies:** LZ-001
+- **Allowed files:** `docs/BEHAVIOUR_CHOREOGRAPHY.md`, `docs/DESIGN.md`, `docs/DECISIONS.md`
+- **Forbidden files:** All source, database/API, configuration, assets and Arduino files.
+- **Inputs / contract:** Approved CreatureState contract and existing character asset.
+- **Required behaviour:** For idle, look/blink, crawl, sleep, stroke, hug, stress breathing, arrival and leaving, document `Trigger → Internal State → Behaviour → Intended Perception`; define durations, interruption rules and prohibited UI.
+- **Deliverables:** Behaviour choreography sheet and Mobile/Desktop render notes.
+- **Acceptance:**
+  - [x] No toast, exposed numerical stress score, dashboard panel or chat-first interaction is required.
+  - [x] Every state has a low-attention visible expression.
+  - [x] The specification gives frontend implementation decisions rather than abstract mood adjectives.
+- **Review evidence:** Design review PASS; Architect review PASS; Critic PASS after alignment with the final canonical state contract.
+- **Status:** DONE
+
+## LZ-002 — Autonomous Behaviour Engine
+
+- **Owner:** Frontend Agent
+- **Reviewers:** Architect, Design Agent, QA
+- **Goal / research relevance:** Make a creature visibly self-directed during a 30-second observation, without adding chat or control-first UI.
+- **Dependencies:** LZ-001, LZ-D01
+- **Allowed files:** `frontend/src/pages/Habitat.tsx`, `frontend/src/liizooo/**`, `frontend/src/index.css`, task-specific frontend tests.
+- **Forbidden files:** `lizo/src/**`, `frontend/src/components/chat/**`, `frontend/src/pages/Soul.tsx`, `lizo_v4/**`, existing generated asset files.
+- **Inputs / contract:** Approved CreatureState and choreography; existing `/api/v1/nest` stays read/write authority.
+- **Required behaviour:** Extract reusable creature renderer/hook modules from `Habitat.tsx`; render idle breathing, occasional blink/look, inactivity sleep and cancellable crawl between exactly three named anchors. User stroke/hug must interrupt autonomous motion safely.
+- **Deliverables:** Modular `frontend/src/liizooo/` implementation, timing notes, regression evidence.
+- **Acceptance:**
+  - [ ] No new primary UI button is introduced.
+  - [ ] Idle, look/blink, crawl and sleep are observable autonomously.
+  - [ ] Stroke and hug interrupt then restore appropriate state.
+  - [ ] Current Mobile Habitat and Device Jump still work.
+  - [ ] `npx tsc -b`, production build and browser-console check pass.
+- **Status:** CRITIC
+
+## LZ-003 — Desktop Habitat Life
+
+- **Owner:** Frontend Agent
+- **Reviewers:** Design Agent, QA, Critic
+- **Goal / research relevance:** Turn the fake desktop from a static mockup into a believable work-surface habitat that demonstrates ambient presence.
+- **Dependencies:** LZ-001, LZ-D01, LZ-002
+- **Allowed files:** `frontend/src/liizooo/habitats/DesktopHabitat.tsx`, `frontend/src/liizooo/**`, `frontend/src/index.css`, task-specific frontend tests.
+- **Forbidden files:** `lizo/src/**`, Mobile Habitat source, chat source, routing, assets and Arduino files.
+- **Inputs / contract:** Approved anchor/behaviour interface; Desktop renders Nest state only.
+- **Required behaviour:** Three anchors: paper/window edge, taskbar, screen edge. The creature can rest, crawl, sleep, look toward pointer and leave through a screen edge on Device Jump.
+- **Deliverables:** Desktop habitat module and a reproducible manual test script.
+- **Acceptance:**
+  - [ ] No permanent central card or control panel competes with the creature.
+  - [ ] Autonomous movement is distinguishable from a looping sticker.
+  - [ ] Pointer interaction is smooth and cannot strand the creature off-screen.
+  - [ ] Desktop → Mobile Device Jump remains valid.
+  - [ ] Regression checks and build pass.
+- **Status:** TODO
+
+## LZ-004 — Mobile Habitat Life
+
+- **Owner:** Frontend Agent
+- **Reviewers:** Design Agent, QA, Critic
+- **Goal / research relevance:** Make Mobile Habitat feel like a creature living in the phone rather than a web card containing an image.
+- **Dependencies:** LZ-001, LZ-D01, LZ-002
+- **Allowed files:** `frontend/src/liizooo/habitats/MobileHabitat.tsx`, `frontend/src/liizooo/**`, `frontend/src/index.css`, task-specific frontend tests.
+- **Forbidden files:** `lizo/src/**`, Desktop Habitat source, chat source, routing, assets and Arduino files.
+- **Inputs / contract:** Approved state/behaviour interface and browser haptic capability.
+- **Required behaviour:** Edge-resting appearance, head-to-tail stroke, 550ms hold hug with best-effort vibration, sleep after inactivity and stress slow-breathing. Touch controls must be direct creature interaction, not a visible control tray.
+- **Deliverables:** Mobile habitat module and device/manual verification notes.
+- **Acceptance:**
+  - [ ] Usable at 320px wide without horizontal scroll.
+  - [ ] Stroke, hug, sleep and stress are visually distinct.
+  - [ ] Unsupported haptics fail silently.
+  - [ ] Mobile → Desktop Device Jump remains valid.
+  - [ ] Regression checks and build pass.
+- **Status:** TODO
 
 ---
 
-### TASK-004: 实现在线聊天页面
-- **Agent**: `/frontend` → 然后 `/backend`
-- **读取**: `docs/DESIGN.md`, `docs/ARCHITECTURE.md`, `lizo/src/web/server.py`
-- **前端部分**:
-  - 实现 ChatWindow, ChatMessage, ChatInput 组件
-  - 完成标准：UI 可用，暂时 mock 响应
-- **后端部分**:
-  - 包装现有 chat.py 为 `/api/v1/chat` REST 端点
-  - 开启 CORS
-  - 完成标准：前端能收到真实回复
-- **状态**: DONE（前端 ChatWindow/ChatMessage/ChatInput 实现，对接 /api/v1/chat，UI审查 PASS 45/50；后端 4 个端点全部实装）
+# Sprint 02 — Make Continuity Evident
+
+## LZ-005 — Device Jump 2.0
+
+- **Owner:** Frontend Agent
+- **Reviewers:** Architect, QA, Critic
+- **Goal / research relevance:** Turn location mutation into a memorable transition that visibly communicates one identity crossing device boundaries.
+- **Dependencies:** LZ-002, LZ-003, LZ-004
+- **Allowed files:** `frontend/src/liizooo/**`, `frontend/src/pages/Habitat.tsx`, `frontend/src/index.css`, task-specific frontend tests.
+- **Forbidden files:** `lizo/src/**`, legacy chat files, assets and Arduino files.
+- **Inputs / contract:** Approved `arriving` / `leaving` semantics. No API shape change.
+- **Required behaviour:** Source animates to an edge and becomes unavailable before Nest confirms target; target appears only after Nest location changes. Support Desktop→Mobile, Mobile→Desktop and target-offline timeout feedback without falsely showing a second creature.
+- **Deliverables:** Transition implementation, latency/failure notes, two-device recording plan.
+- **Acceptance:**
+  - [ ] Both directions work against one backend.
+  - [ ] Refresh during/after jump restores one unambiguous location.
+  - [ ] No duplicate creature remains visible after confirmed jump.
+  - [ ] Nest-unavailable state is honest and non-destructive.
+- **Status:** TODO
+
+## LZ-006 — Nest persistence and sync hardening
+
+- **Owner:** Backend / Nest Agent
+- **Reviewers:** Architect, QA, Critic
+- **Goal / research relevance:** Make continuity technically real: Liizooo retains its condition after page refresh and habitat change.
+- **Dependencies:** LZ-001
+- **Allowed files:** `lizo/src/memory/database.py`, `lizo/src/web/server.py`, `lizo/tests/**`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`
+- **Forbidden files:** `frontend/src/**`, `lizo/src/brain/**`, `lizo/src/voice/**`, `lizo_v4/**`, `config.yaml`.
+- **Inputs / contract:** Approved CreatureState, migration plan, existing `/api/v1/nest` callers.
+- **Required behaviour:** Implement safe schema migration/defaulting, validated transitions, atomic persistence, server-side timestamping and clear invalid-request responses. Preserve existing endpoints and old databases.
+- **Deliverables:** Migration-aware Nest implementation and repeatable API/persistence tests.
+- **Acceptance:**
+  - [ ] Refresh/restart returns last valid state.
+  - [ ] Invalid enum/range/transition payloads return non-500 JSON errors.
+  - [ ] Chat, profile, diary, emotion and TTS routes still respond.
+  - [ ] New tests run without external API credentials or hardware.
+- **Status:** TODO
+
+## LZ-007 — Raspberry Pi 5 Nest deployment runbook
+
+- **Owner:** Backend / Nest Agent
+- **Reviewers:** QA, Product Owner
+- **Goal / research relevance:** Turn the Pi 5 into a credible physical computing artefact: LIIZOOO NEST.
+- **Dependencies:** LZ-006
+- **Allowed files:** `docs/DEPLOY.md`, `deploy/**`, `docs/ARCHITECTURE.md`, task-specific deployment scripts.
+- **Forbidden files:** Frontend product code, database schema, Arduino firmware and secrets/config values.
+- **Inputs / contract:** Validated Nest service and Cloudflare Tunnel approach.
+- **Required behaviour:** Document Pi setup, database location/backup, service start/restart, LAN check, tunnel, CORS and a health/Nest endpoint check. Do not claim execution on Pi until a human provides evidence.
+- **Deliverables:** Pi 5 runbook and final-Demo setup checklist.
+- **Acceptance:**
+  - [ ] No secret is committed.
+  - [ ] A human can follow it from a clean Pi setup.
+  - [ ] Verified and unverified steps are explicitly distinguished.
+- **Status:** TODO
+
+## LZ-008 — Cross-device continuity QA and demo gate
+
+- **Owner:** QA / Tester
+- **Reviewers:** Critic, Product Owner
+- **Goal / research relevance:** Produce evidence that final Demo shows continuous identity, not two isolated mockups.
+- **Dependencies:** LZ-003, LZ-004, LZ-005, LZ-006
+- **Allowed files:** `lizo/tests/**`, `frontend/src/**/*.test.*`, `docs/QA_LZ008.md`
+- **Forbidden files:** Feature source, state contract, assets and Arduino firmware.
+- **Inputs / contract:** Approved state/API and implementation deliverables.
+- **Required behaviour:** Test both jump directions, touch/hug, autonomous sleep, stress breathing, refresh/restart persistence, backend-offline fallback and legacy route regression.
+- **Deliverables:** Executed checklist, failures, evidence links/recording instructions, explicit PASS/REJECT recommendation.
+- **Acceptance:**
+  - [ ] Automated checks have command/output evidence.
+  - [ ] Manual checks are marked pass/fail/not-tested with device/browser context.
+  - [ ] Any critical failure blocks final Demo.
+- **Status:** TODO
 
 ---
 
-### TASK-005: 实现数字人格空间页面
-- **Agent**: `/frontend` → 然后 `/backend`
-- **读取**: `docs/DESIGN.md`, `docs/ARCHITECTURE.md`, `lizo/src/memory/database.py`
-- **前端部分**:
-  - 实现 DiaryList, EmotionChart（用 recharts）, VideoGallery
-  - 完成标准：组件存在，暂时用 mock 数据
-- **后端部分**:
-  - 实现 `/api/v1/diary` 和 `/api/v1/emotion` 端点
-  - 完成标准：返回真实 SQLite 数据
-- **状态**: DONE（DiaryList/EmotionChart/VideoGallery 实现，Soul 页接 API，UI审查 PASS 42/50，recharts 独立 chunk lazy load）
+# Sprint 03 — Embodiment, Demo and Paper
 
----
+## LZ-009 — Physical embodiment bridge
 
-### TASK-006: 全站审查
-- **Agent**: `/reviewer`
-- **依赖**: TASK-003, TASK-004, TASK-005
-- **读取**: `frontend/src/**`, `docs/DESIGN.md`
-- **检查项**: 类型完整性、设计一致性、移动端适配、API 安全
-- **完成标准**: DECISIONS.md 里有完整审查报告，无 Critical 级别问题
-- **状态**: DONE（全站审查完成，2 Critical + 4 Major 已全部修复，5 Minor 记录在 DECISIONS.md 待后续迭代）
+- **Owner:** Architect
+- **Reviewers:** Backend/Nest Agent, Critic
+- **Goal / research relevance:** Define, but do not prematurely build, how Nest state maps to Pi/Arduino/plush embodiment.
+- **Dependencies:** LZ-001, LZ-006
+- **Allowed files:** `docs/PHYSICAL_EMBODIMENT.md`, `docs/ARCHITECTURE.md`, `docs/DECISIONS.md`
+- **Forbidden files:** `lizo_v4/**`, production frontend/backend source and configuration.
+- **Required behaviour:** Map breathing, heartbeat, touch and sleep to possible physical outputs; declare unavailable hardware and safe demo substitutions.
+- **Deliverables:** Embodiment mapping and future implementation boundary.
+- **Acceptance:**
+  - [ ] No unavailable physical feature is presented as completed.
+  - [ ] Pi 5 is accurately framed as Nest even without Arduino.
+- **Status:** TODO
 
----
+## LZ-010 — Watch sensing concept
 
----
+- **Owner:** Architect + Design Agent
+- **Reviewers:** Critic
+- **Goal / research relevance:** Describe Watch as a consent-based sensory organ, not a miniature Liizooo app.
+- **Dependencies:** LZ-001
+- **Allowed files:** `docs/WATCH_SENSING_CONCEPT.md`, `docs/DECISIONS.md`
+- **Forbidden files:** All application code, assets and deployment config.
+- **Required behaviour:** Specify permitted future signals, consent/privacy boundaries and signal→Nest→behaviour examples without fabricated health claims.
+- **Deliverables:** One-page concept and diagram source description.
+- **Acceptance:**
+  - [ ] No medical inference or implemented-Watch claim.
+  - [ ] Interaction remains non-verbal and low-attention.
+- **Status:** TODO
 
-### TASK-007: 全站导航栏 NAV-01
-- **Agent**: `/frontend`
-- **读取**: `docs/DESIGN.md`
-- **输入**: 创建固定顶部导航栏 `Nav.tsx`，包含 首页/聊天/灵魂空间/关于 四个链接，active 高亮，响应式。接入 App.tsx。
-- **完成标准**: 所有页面顶部有可用导航，页面间可跳转，ChatWindow 高度适配
-- **状态**: DONE（Nav.tsx 已创建，App.tsx 已接入，ChatWindow 改为 h-[calc(100vh-3.5rem)]）
+## LZ-011 — Final demo film and research evidence pack
 
----
+- **Owner:** Product Owner with QA support
+- **Reviewers:** Critic
+- **Goal / research relevance:** Capture evidence for the research claim and final presentation.
+- **Dependencies:** LZ-008
+- **Allowed files:** `docs/DEMO_SCRIPT.md`, `docs/PAPER_EVIDENCE.md`
+- **Forbidden files:** Product source unless an explicit bug-fix task is opened.
+- **Required behaviour:** Record Desktop presence, touch, sleep, jump to phone, haptic hug, stress breathing and Nest state; capture architecture and limitation evidence.
+- **Deliverables:** 60–90 second script, shot list, screenshots and accurate claims list.
+- **Acceptance:**
+  - [ ] Every claim in the script is demonstrable.
+  - [ ] Demo tells one continuity story rather than listing features.
+- **Status:** TODO
 
-### TASK-008: 返回用户识别 SIGNATURE-1
-- **Agent**: `/frontend`
-- **读取**: `docs/DESIGN.md`
-- **输入**: 在 ChatWindow 使用 localStorage 记录首次/上次访问时间，按时间差给出差异化开场白（初次/当天回访/3天/7天+）
-- **完成标准**: 刷新页面后 Lizo 问候语体现访问历史，7天未回给出 "我以为你忘记我了"
-- **状态**: DONE（FIRST_VISIT_KEY / LAST_VISIT_KEY，5段时间梯度问候语）
+## LZ-012 — Paper evaluation and limitation gate
 
----
-
----
-
-### TASK-009: 聊天历史 localStorage 持久化
-- **状态**: DONE（HISTORY_KEY，MAX_HISTORY=50，读取失败静默，写入在 useEffect）
-
----
-
-### TASK-010: Night Mode 深色模式切换
-- **状态**: DONE（useTheme hook，data-theme="night" CSS 变量覆盖，Nav 🌙/☀️ 按钮，localStorage 偏好持久化）
-
----
-
-### TASK-011: EmotionChart 主题感知修复
-- **状态**: DONE（MutationObserver 监听 data-theme 变化，切换深色模式时图表颜色实时更新）
-
----
-
-### TASK-012: Vercel 部署配置
-- **状态**: DONE（vercel.json，VITE_API_BASE_URL 环境变量，.env.example，.gitignore，ARCHITECTURE.md 部署说明）
-
----
-
-## 完成的任务
-
-TASK-001 ~ TASK-012
-
----
-
-## 阻塞中的任务
-
-无
-
----
-
-## 下一步（v1.1）
-
-- TASK-009: 聊天历史 localStorage 持久化（刷新不丢失）
-- TASK-010: Night Mode 深色模式切换
-- TASK-011: /about 页面内容填充（硬件介绍）
+- **Owner:** Critic / Research Reviewer
+- **Reviewers:** Product Owner
+- **Goal / research relevance:** Ensure the paper distinguishes prototype evidence, planned evaluation and future work.
+- **Dependencies:** LZ-011
+- **Allowed files:** `docs/PAPER_EVIDENCE.md`, final paper draft when supplied by Product Owner.
+- **Forbidden files:** Product source and test manipulation.
+- **Required behaviour:** Audit every technical/research claim for evidence, identify missing method detail and reject fabricated user-study, Watch or hardware claims.
+- **Deliverables:** PASS/REJECT research report.
+- **Acceptance:**
+  - [ ] Claims exactly match evidence.
+  - [ ] Limitations are explicit.
+  - [ ] Contribution is articulated as design exploration, not unproven efficacy.
+- **Status:** TODO

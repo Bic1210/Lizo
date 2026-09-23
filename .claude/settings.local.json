@@ -26,7 +26,13 @@
       "Bash(curl -s http://localhost:3000)",
       "Bash(chmod +x *)",
       "Bash(git init *)",
-      "Bash(git add *)"
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(git commit -m ' *)",
+      "Bash(gh repo *)",
+      "Bash(git commit -m 'docs: add project README, replace Vite boilerplate *)",
+      "Bash(git push *)",
+      "Bash(git remote *)"
     ]
   }
 }

@@ -23,6 +23,7 @@ import yaml
 # 模块导入
 from src.brain.chat import ChatEngine
 from src.brain.emotion import analyze
+from src.brain.persona import extract_nickname
 from src.memory.database import MemoryStore
 from src.hardware.arduino import ArduinoController
 from src.web.server import create_app
@@ -80,11 +81,20 @@ def run_voice_mode(config, memory, brain, body):
             if text is None:
                 time.sleep(0.3)
                 continue
+
+            nickname = extract_nickname(text)
+            if nickname:
+                memory.set_nickname(nickname)
             
             # 想
             context = memory.recent_context(3)
             stats = memory.today_stats()
-            reply, emotion = brain.reply(text, context, stats)
+            reply, emotion = brain.reply(
+                text,
+                context,
+                stats,
+                nickname=memory.get_nickname(),
+            )
             
             memory.save_chat(text, reply, emotion.name, emotion.score)
             body.react_to_emotion(emotion.name, emotion.score)
@@ -136,10 +146,19 @@ def run_text_mode(config, memory, brain, body):
                 memory.save_diary(diary)
                 print(f"\n[Lizo日记] {diary}\n")
                 continue
+
+            nickname = extract_nickname(text)
+            if nickname:
+                memory.set_nickname(nickname)
             
             context = memory.recent_context(3)
             stats = memory.today_stats()
-            reply, emotion = brain.reply(text, context, stats)
+            reply, emotion = brain.reply(
+                text,
+                context,
+                stats,
+                nickname=memory.get_nickname(),
+            )
             
             memory.save_chat(text, reply, emotion.name, emotion.score)
             body.react_to_emotion(emotion.name, emotion.score)

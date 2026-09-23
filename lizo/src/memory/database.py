@@ -35,7 +35,29 @@ class MemoryStore:
                 ts TEXT NOT NULL,
                 type TEXT
             );
+            CREATE TABLE IF NOT EXISTS user_profile (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                nickname TEXT,
+                updated_at TEXT NOT NULL
+            );
+            CREATE TABLE IF NOT EXISTS nest_state (
+                id INTEGER PRIMARY KEY CHECK (id = 1),
+                location TEXT NOT NULL DEFAULT 'desktop',
+                mood TEXT NOT NULL DEFAULT 'calm',
+                energy INTEGER NOT NULL DEFAULT 72,
+                bond INTEGER NOT NULL DEFAULT 64,
+                behavior TEXT NOT NULL DEFAULT 'resting',
+                updated_at TEXT NOT NULL
+            );
         """)
+        self.conn.execute(
+            """
+            INSERT OR IGNORE INTO nest_state
+              (id, location, mood, energy, bond, behavior, updated_at)
+            VALUES (1, 'desktop', 'calm', 72, 64, 'resting', ?)
+            """,
+            (datetime.now().isoformat(),),
+        )
         self.conn.commit()
     
     # ===== 对话 =====
@@ -76,6 +98,66 @@ class MemoryStore:
             "SELECT emotion, COUNT(*) c FROM chats WHERE ts LIKE ? GROUP BY emotion ORDER BY c DESC LIMIT 1",
             (f"{today}%",)).fetchone()
         return r[0] if r else "--"
+
+    # ===== 用户画像 =====
+
+    def set_nickname(self, nickname: str):
+        self.conn.execute(
+            """
+            INSERT INTO user_profile(id, nickname, updated_at)
+            VALUES(1, ?, ?)
+            ON CONFLICT(id) DO UPDATE SET
+              nickname=excluded.nickname,
+              updated_at=excluded.updated_at
+            """,
+            (nickname, datetime.now().isoformat()),
+        )
+        self.conn.commit()
+
+    def get_nickname(self) -> Optional[str]:
+        row = self.conn.execute(
+            "SELECT nickname FROM user_profile WHERE id = 1"
+        ).fetchone()
+        return row[0] if row and row[0] else None
+
+    def get_profile(self) -> Dict:
+        return {"nickname": self.get_nickname()}
+
+    # ===== LIIZOOO NEST =====
+
+    def get_nest_state(self) -> Dict:
+        row = self.conn.execute(
+            "SELECT location, mood, energy, bond, behavior, updated_at "
+            "FROM nest_state WHERE id = 1"
+        ).fetchone()
+        if row is None:
+            # Defensive fallback for databases created before the migration.
+            return {
+                "location": "desktop", "mood": "calm", "energy": 72,
+                "bond": 64, "behavior": "resting", "updated_at": None,
+            }
+        return {
+            "location": row[0], "mood": row[1], "energy": row[2],
+            "bond": row[3], "behavior": row[4], "updated_at": row[5],
+        }
+
+    def update_nest_state(self, **changes) -> Dict:
+        """Persist the one shared Liizooo state hosted by the Nest."""
+        allowed = {"location", "mood", "energy", "bond", "behavior"}
+        updates = {key: value for key, value in changes.items() if key in allowed}
+        if not updates:
+            return self.get_nest_state()
+
+        columns = list(updates)
+        assignments = ", ".join(f"{column} = ?" for column in columns)
+        values = [updates[column] for column in columns]
+        values.append(datetime.now().isoformat())
+        self.conn.execute(
+            f"UPDATE nest_state SET {assignments}, updated_at = ? WHERE id = 1",
+            values,
+        )
+        self.conn.commit()
+        return self.get_nest_state()
     
     # ===== 情绪趋势 =====
     

@@ -79,6 +79,45 @@ body {
   will-change: transform, opacity;
 }
 
+@keyframes liizooo-breathe {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-2px, -3px, 0) scale(1.018, 1.035); }
+}
+
+@keyframes liizooo-arrive {
+  from { opacity: 0; transform: translate3d(130px, 0, 0) scale(.92); }
+  to { opacity: 1; transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.liizooo-pet {
+  z-index: 5;
+  cursor: grab;
+}
+
+.liizooo-pet:active { cursor: grabbing; }
+
+.liizooo-pet img {
+  height: 100%;
+  width: 100%;
+  object-fit: contain;
+  pointer-events: none;
+}
+
+.animate-liizooo-breathe { animation: liizooo-breathe 3.8s ease-in-out infinite; }
+.animate-liizooo-arrive { animation: liizooo-arrive 700ms cubic-bezier(.2,.8,.2,1) both; }
+
+.habitat-action {
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 10px;
+  background: rgba(255,255,255,.04);
+  color: #d4d0d9;
+  padding: 8px;
+  font-size: 12px;
+  transition: background-color 180ms ease;
+}
+
+.habitat-action:hover { background: rgba(255,255,255,.1); }
+
 [data-theme="night"] {
   --color-bg-base: var(--color-night-bg);
   --color-bg-surface: var(--color-night-surface);

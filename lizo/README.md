@@ -1,4 +1,4 @@
-# 🦎 Lizo - AI Companion Lizard Robot
+1# 🦎 Lizo - AI Companion Lizard Robot
 
 基于AIGC技术的治愈系蜥蜴陪伴机器人，具有语音对话、情绪感知、记忆系统和数字人格。
 

@@ -10,6 +10,10 @@ interface Message {
   emotion?: string
 }
 
+interface Profile {
+  nickname?: string | null
+}
+
 function newMsg(role: Message['role'], text: string, emotion?: string): Message {
   return { id: crypto.randomUUID(), role, text, emotion }
 }
@@ -77,6 +81,15 @@ function readViewportHeight() {
   return Math.round(window.visualViewport?.height ?? window.innerHeight)
 }
 
+function personalizeGreeting(text: string, nickname: string) {
+  if (text.includes(nickname)) return text
+  if (text.includes('第一次见面')) return `${nickname}，很高兴认识你。`
+  if (text.startsWith('又回来了')) return `${nickname}，${text}`
+  if (text.startsWith('好几天没来了')) return `${nickname}，${text}`
+  if (text.includes('我以为你忘记我了')) return `${nickname}，${text}`
+  return `${nickname}，${text}`
+}
+
 export default function ChatWindow() {
   const [messages, setMessages] = useState<Message[]>(() => {
     try {
@@ -93,6 +106,7 @@ export default function ChatWindow() {
   const [thinkingPhrase, setThinkingPhrase] = useState(THINKING_PHRASES[0])
   const [typewriterId, setTypewriterId] = useState<string | null>(null)
   const [viewportHeight, setViewportHeight] = useState<number | null>(readViewportHeight)
+  const [profile, setProfile] = useState<Profile>({})
   const [voiceEnabled, setVoiceEnabled] = useState(() => {
     try {
       return localStorage.getItem(VOICE_KEY) !== 'off'
@@ -119,6 +133,33 @@ export default function ChatWindow() {
       localStorage.setItem(VOICE_KEY, voiceEnabled ? 'on' : 'off')
     } catch { /* noop */ }
   }, [voiceEnabled])
+
+  useEffect(() => {
+    const ctrl = new AbortController()
+
+    void (async () => {
+      try {
+        const res = await apiFetch('/api/v1/profile', { signal: ctrl.signal })
+        const json = await res.json()
+        if (json.status !== 'success') return
+
+        const nextProfile = (json.data ?? {}) as Profile
+        setProfile(nextProfile)
+
+        const nickname = nextProfile.nickname?.trim()
+        if (!nickname) return
+
+        setMessages(prev => {
+          if (prev.length !== 1 || prev[0].role !== 'lizo') return prev
+          return [{ ...prev[0], text: personalizeGreeting(prev[0].text, nickname) }]
+        })
+      } catch (e) {
+        if (e instanceof Error && e.name === 'AbortError') return
+      }
+    })()
+
+    return () => ctrl.abort()
+  }, [])
 
   // P5: iOS 键盘弹起时，跟随 visualViewport 收缩聊天区域，避免输入栏被遮住
   useEffect(() => {
@@ -239,6 +280,7 @@ export default function ChatWindow() {
       })
       const json = await res.json()
       if (json.status === 'success') {
+        setProfile((json.data?.profile ?? {}) as Profile)
         const reply = newMsg('lizo', json.data.reply, json.data.emotion)
         setTypewriterId(reply.id)
         setMessages(prev => [...prev, reply])
@@ -270,7 +312,9 @@ export default function ChatWindow() {
         </div>
         <div>
           <p className="text-sm font-display font-semibold text-text-primary">Lizo</p>
-          <p className="text-xs text-text-muted font-body">在线</p>
+          <p className="text-xs text-text-muted font-body">
+            {profile.nickname ? `记得你叫 ${profile.nickname}` : '在线'}
+          </p>
         </div>
         <button
           type="button"

@@ -4,6 +4,7 @@ import { useTheme } from '../../lib/useTheme'
 
 const LINKS = [
   { to: '/',      label: '首页' },
+  { to: '/habitat', label: '栖息地' },
   { to: '/chat',  label: '聊天' },
   { to: '/soul',  label: '灵魂空间' },
   { to: '/about', label: '关于' },
@@ -19,7 +20,7 @@ export default function Nav() {
           to="/"
           className={`font-display font-bold text-text-primary text-lg tracking-tight ${focusRing}`}
         >
-          Lizo
+          LIIZOOO
         </Link>
         <div className="flex items-center gap-0.5">
           {LINKS.map(({ to, label }) => {

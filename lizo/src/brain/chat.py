@@ -5,7 +5,7 @@
 import openai
 from typing import Tuple, Optional
 
-from .persona import SYSTEM_PROMPT, FALLBACK_REPLIES
+from .persona import build_system_prompt, fallback_reply
 from .emotion import analyze, EmotionResult
 
 
@@ -17,8 +17,8 @@ class ChatEngine:
         self.max_tokens = max_tokens
         self.temperature = temperature
     
-    def reply(self, user_text: str, context: list = None, 
-              stats: dict = None) -> Tuple[str, EmotionResult]:
+    def reply(self, user_text: str, context: list = None,
+              stats: dict = None, nickname: Optional[str] = None) -> Tuple[str, EmotionResult]:
         """
         生成蜥蜴回复
         
@@ -34,12 +34,15 @@ class ChatEngine:
         emotion = analyze(user_text)
         
         # 构建消息
-        context_note = f"\n[用户当前情绪:{emotion.name}({emotion.intensity})"
-        if stats:
-            context_note += f" 今日第{stats.get('count',0)+1}次对话"
-        context_note += "]"
-        
-        messages = [{"role": "system", "content": SYSTEM_PROMPT + context_note}]
+        messages = [{
+            "role": "system",
+            "content": build_system_prompt(
+                emotion_name=emotion.name,
+                intensity=emotion.intensity,
+                stats=stats,
+                nickname=nickname,
+            ),
+        }]
         
         if context:
             messages.extend(context)
@@ -57,8 +60,8 @@ class ChatEngine:
             reply_text = resp.choices[0].message.content.strip()
         except Exception as e:
             print(f"[ChatEngine] API错误: {e}")
-            reply_text = FALLBACK_REPLIES.get(emotion.name, "嗯~我在这里")
-        
+            reply_text = fallback_reply(emotion.name, nickname)
+
         return reply_text, emotion
     
     def generate_diary(self, conversations: list, stats: dict) -> str:

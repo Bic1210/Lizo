@@ -4,6 +4,7 @@ import Nav from './components/layout/Nav'
 import Home from './pages/Home'
 import Chat from './pages/Chat'
 import About from './pages/About'
+import Habitat from './pages/Habitat'
 
 const Soul = lazy(() => import('./pages/Soul'))
 
@@ -21,6 +22,7 @@ function App() {
             <Route path="/" element={<Home />} />
             <Route path="/soul" element={<Soul />} />
             <Route path="/chat" element={<Chat />} />
+            <Route path="/habitat" element={<Habitat />} />
             <Route path="/about" element={<About />} />
           </Routes>
         </Suspense>
